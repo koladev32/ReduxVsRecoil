@@ -8,12 +8,14 @@
 
 import React from 'react';
 import {SafeAreaView, StyleSheet, Text, View, Button} from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
+import {atom, useRecoilState} from 'recoil';
 
+const counterState = atom({
+  key: 'counterState',
+  default: 0,
+});
 const App = () => {
-  const {counter} = useSelector(state => state);
-
-  const dispatch = useDispatch();
+  const [counter, setCounter] = useRecoilState(counterState);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,12 +25,12 @@ const App = () => {
       <View style={styles.buttonContainer}>
         <Button
           title="Increment"
-          onPress={() => dispatch({type: 'INCREMENT'})}
+          onPress={() => setCounter(counter + 1)}
           color="#5000ca"
         />
         <Button
           title="Decrement"
-          onPress={() => dispatch({type: 'DECREMENT'})}
+          onPress={() => setCounter(counter - 1)}
           color="#5000ca"
         />
       </View>
