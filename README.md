@@ -1,4 +1,8 @@
-# Revoil vs Redux: React Native
+# Recoil vs Redux: React Native
+
+This is a short introduction to the difference between [Redux](https://redux.js.org/) and [Recoil](https://recoiljs.org/fr/).
+
+You can find the code concerning the counter for Redux at the `redux-branch` branch and the code for the counter for Recoil at the `recoil-branch` branch.
 
 ## Installation
 
