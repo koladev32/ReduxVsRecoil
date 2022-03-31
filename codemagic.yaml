@@ -13,7 +13,6 @@ workflows:
             node: 16.14.0
         scripts:
             - yarn install
-            - npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/app.bundle
             - echo "sdk.dir=$HOME/programs/android-sdk-macosx" > "$CM_BUILD_DIR/android/local.properties"
             - |
                 chmod -R 777 $CM_BUILD_DIR
