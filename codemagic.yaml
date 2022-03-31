@@ -5,41 +5,22 @@ workflows:
         instance_type: mac_mini
         environment:
             groups:
-            # Add the group environment variables in Codemagic UI (either in Application/Team variables) - https://docs.codemagic.io/variables/environment-variable-groups/
-                - keystore_credentials # <-- (Includes CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS_PASSWORD, CM_KEY_ALIAS_USERNAME)
-                  # CM_KEYSTORE <-- Put your keystore file here
-                  # CM_KEYSTORE_PASSWORD <-- Put your keystore password here
-                  # CM_KEY_ALIAS_PASSWORD <-- Put your keystore alias password here
-                  # CM_KEY_ALIAS_USERNAME <-- Put your keystore alias username here
-                - google_play # <-- (Includes GCLOUD_SERVICE_ACCOUNT_CREDENTIALS <-- Put your google-services.json)
-                - other
+                - react-recoil-app 
             vars:
-                PACKAGE_NAME: "YOUR_PACKAGE_NAME" # <-- Put your package name here e.g. com.domain.myapp
-            node: latest
+                CM_KEYSTORE_PASSWORD: Encrypted()
+                CM_KEY_PASSWORD: Encrypted()
+                CM_KEY_ALIAS: Encrypted()
+            node: 16.14.0
         scripts:
-            - name: Install npm dependencies
-              script: |
-                npm install
-            - name: Set Android SDK location
-              script: |
-                echo "sdk.dir=$ANDROID_SDK_ROOT" > "$FCI_BUILD_DIR/android/local.properties"
-            - name: Set up keystore
-              script: |
-                    echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.keystore
-                    # The following script creates key.properties file and stores the credentials in it. As we configure code signing in app/build.gradle file, the following part is unnecessary unless code signing is configured differently as explained in the documentation: https://docs.codemagic.io/flutter-code-signing/android-code-signing/
-                    # cat >> "$FCI_BUILD_DIR/android/key.properties" <<EOF
-                    # storePassword=$CM_KEYSTORE_PASSWORD
-                    # keyPassword=$CM_KEY_ALIAS_PASSWORD
-                    # keyAlias=$CM_KEY_ALIAS_USERNAME
-                    # storeFile=/tmp/keystore.keystore
-                    # EOF               
-            - name: Build Android release
-              script: |
-                # Set environment variable so it can be used to increment build number in android/app/build.gradle
-                # Note that tracks can be specified when retrieving latest build number from Google Play, for example:
-                # export NEW_BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks=alpha) + 1))
-                export LATEST_GOOGLE_PLAY_BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME") + 1))
-                cd android && ./gradlew assembleRelease
+            - yarn install
+            - npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/app.bundle
+            - echo "sdk.dir=$HOME/programs/android-sdk-macosx" > "$CM_BUILD_DIR/android/local.properties"
+            - |
+                chmod -R 777 $CM_BUILD_DIR
+                echo $CM_KEYSTORE | base64 --decode > $CM_BUILD_DIR/keystore.jks
+                # build Android
+                cd android
+                ./gradlew assembleRelease
         artifacts:
             - android/app/build/outputs/**/*.apk
     react-native-ios:
@@ -88,7 +69,7 @@ workflows:
                 #!/bin/sh
                 set -e
                 set -x
-                cd $FCI_BUILD_DIR/ios
+                cd $CM_BUILD_DIR/ios
                 # agvtool new-version -all $(($BUILD_NUMBER + 1))
                 agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID") + 1))
             - name: Set up code signing settings on Xcode project
@@ -96,7 +77,7 @@ workflows:
                 xcode-project use-profiles --warn-only
             - name: Build ipa for distribution
               script: |
-                xcode-project build-ipa --workspace "$FCI_BUILD_DIR/ios/$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME" 
+                xcode-project build-ipa --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME" 
         artifacts:
             - build/ios/ipa/*.ipa
             - /tmp/xcodebuild_logs/*.log
