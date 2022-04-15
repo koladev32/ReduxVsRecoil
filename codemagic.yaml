@@ -28,9 +28,9 @@ workflows:
         instance_type: mac_mini
         environment:
             vars:
-                XCODE_WORKSPACE: "ios/react-redux.xcworkspace"
-                XCODE_SCHEME: "redux-recoil"
-                BUNDLE_ID: "io.codemagic.reactrecoil"
+                XCODE_WORKSPACE: "ios/ReduxVsRecoil.xcworkspace"
+                XCODE_SCHEME: "ReduxVsRecoil"
+                BUNDLE_ID: "io.codemagic.ReduxVsRecoil"
                 APP_STORE_APP_ID: 1555555551 # <-- Put the app id number here. This is found in App Store Connect > App > General > App Information
             node: 16.14.0
             xcode: 12.5
